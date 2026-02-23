@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Top-level application menu (shows as standalone app in Odoo) -->
+    <menuitem id="menu_auto_financial_auditing_root"
+              name="Transaction Auditing"
+              web_icon="auto_financial_auditing,static/description/icon.png"
+              sequence="99"/>
+
+    <!-- Transaction Auditing -->
+    <menuitem id="menu_audit_transaction"
+              name="Transaction Auditing"
+              parent="menu_auto_financial_auditing_root"
+              action="auto_financial_auditing.action_audit_transaction"
+              sequence="10"/>
+
+    <!-- Audited Reports submenu -->
+    <menuitem id="menu_audited_reports"
+              name="Audited Reports"
+              parent="menu_auto_financial_auditing_root"
+              sequence="20"/>
+
+    <menuitem id="menu_audited_balance_sheet"
+              name="Audited Balance Sheet"
+              parent="menu_audited_reports"
+              action="auto_financial_auditing.action_audited_balance_sheet_wizard"
+              sequence="10"/>
+
+    <menuitem id="menu_audited_pnl"
+              name="Audited P&amp;L Report"
+              parent="menu_audited_reports"
+              action="auto_financial_auditing.action_audited_pnl_wizard"
+              sequence="20"/>
+
+</odoo>

@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Wizard: Input Form -->
+    <record id="view_audited_pnl_wizard" model="ir.ui.view">
+        <field name="name">audited.pnl.wizard</field>
+        <field name="model">audited.pnl</field>
+        <field name="arch" type="xml">
+            <form string="Audited P&amp;L Report">
+                <sheet>
+                    <h2>Audited Profit &amp; Loss Report</h2>
+                    <p class="text-muted">
+                        Only transactions entered in the Transaction Auditing form
+                        (with both customer and cashier signatures) will appear in
+                        this Audited P&amp;L Report.
+                    </p>
+
+                    <!-- ── Period Preset ── -->
+                    <group string="Period">
+                        <field name="period_preset" string="Period"/>
+                        <field name="date_from" required="1"
+                               invisible="period_preset != 'custom'"/>
+                        <field name="date_to"   required="1"
+                               invisible="period_preset != 'custom'"/>
+                        <!-- Show readonly dates for non-custom presets -->
+                        <field name="date_from" readonly="1" string="From"
+                               invisible="period_preset == 'custom'"/>
+                        <field name="date_to"   readonly="1" string="To"
+                               invisible="period_preset == 'custom'"/>
+                    </group>
+
+                    <!-- ── Company Scope ── -->
+                    <group string="Companies">
+                        <field name="company_scope" string="Company Scope"/>
+                        <!-- All companies: readonly list -->
+                        <field name="company_ids"
+                               widget="many2many_tags"
+                               readonly="1"
+                               string="Active Companies (from switcher)"
+                               invisible="company_scope != 'all'"/>
+                        <!-- Selected companies: editable -->
+                        <field name="company_ids"
+                               widget="many2many_tags"
+                               string="Select Companies"
+                               invisible="company_scope != 'selected'"/>
+                    </group>
+
+                    <!-- ── Options ── -->
+                    <group string="Options">
+                        <field name="target_move"/>
+                    </group>
+
+                    <footer>
+                        <button name="action_compute"
+                                string="Compute Report"
+                                type="object"
+                                class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Result: Report View -->
+    <record id="view_audited_pnl_result" model="ir.ui.view">
+        <field name="name">audited.pnl.result</field>
+        <field name="model">audited.pnl</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <form string="Audited P&amp;L Report">
+                <header>
+                    <button name="action_print_pdf"
+                            string="Print PDF"
+                            type="object"
+                            class="btn-primary"/>
+                    <button name="action_export_excel"
+                            string="Export Excel"
+                            type="object"
+                            class="btn-secondary"/>
+                    <button name="action_compute"
+                            string="Recompute"
+                            type="object"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                        <h4 class="text-muted">
+                            <field name="company_names" readonly="1"/>
+                        </h4>
+                        <h5 class="text-muted">
+                            Period: <field name="date_from" readonly="1"/>
+                            — <field name="date_to" readonly="1"/>
+                        </h5>
+                    </div>
+
+                    <field name="currency_id" invisible="1"/>
+
+                    <!-- KPI Summary Row -->
+                    <div class="o_stat_buttons">
+                        <button class="o_stat_button btn_green" type="object" name="">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="revenue_total" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"/>
+                                </span>
+                                <span class="o_stat_text">Revenue</span>
+                            </div>
+                        </button>
+                        <button class="o_stat_button btn_amber" type="object" name="">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="gross_profit" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"/>
+                                </span>
+                                <span class="o_stat_text">Gross Profit</span>
+                            </div>
+                        </button>
+                        <button class="o_stat_button btn_red" type="object" name="">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="indirect_expense_total" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"/>
+                                </span>
+                                <span class="o_stat_text">Total Expenses</span>
+                            </div>
+                        </button>
+                        <button class="o_stat_button btn_blue" type="object" name="">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="net_profit" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"/>
+                                </span>
+                                <span class="o_stat_text">Net Profit</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- ══ REVENUE ══ -->
+                    <div class="pnl_sec_hdr pnl_revenue">
+                        Revenue (Audited Direct Income)
+                    </div>
+                    <group class="pnl_sec_body pnl_revenue_body">
+                        <field name="line_ids" nolabel="1" readonly="1"
+                               domain="[('section','=','revenue')]">
+                            <list>
+                                <field name="account_code"/>
+                                <field name="account_name"/>
+                                <field name="amount" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"/>
+                                <field name="currency_id" column_invisible="1"/>
+                            </list>
+                        </field>
+                        <group>
+                            <field name="revenue_total" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1" string="Total Revenue"/>
+                        </group>
+                    </group>
+
+                    <!-- ══ COGS ══ -->
+                    <div class="pnl_sec_hdr pnl_cogs">
+                        Cost of Revenue — COGS (Audited)
+                    </div>
+                    <group class="pnl_sec_body pnl_cogs_body">
+                        <field name="line_ids" nolabel="1" readonly="1"
+                               domain="[('section','=','cogs')]">
+                            <list>
+                                <field name="account_code"/>
+                                <field name="account_name"/>
+                                <field name="amount" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"/>
+                                <field name="currency_id" column_invisible="1"/>
+                            </list>
+                        </field>
+                        <group>
+                            <field name="cogs_total" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1" string="Total COGS"/>
+                        </group>
+                    </group>
+
+                    <!-- ══ GROSS PROFIT ══ -->
+                    <group>
+                        <group class="audit_highlight" string="Gross Profit">
+                            <field name="gross_profit" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1" nolabel="1"/>
+                        </group>
+                    </group>
+
+                    <!-- ══ OTHER INCOME ══ -->
+                    <div class="pnl_sec_hdr pnl_other_income">
+                        Other Income (Audited)
+                    </div>
+                    <group class="pnl_sec_body pnl_other_income_body">
+                        <field name="line_ids" nolabel="1" readonly="1"
+                               domain="[('section','=','other_income')]">
+                            <list>
+                                <field name="account_code"/>
+                                <field name="account_name"/>
+                                <field name="amount" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"/>
+                                <field name="currency_id" column_invisible="1"/>
+                            </list>
+                        </field>
+                        <group>
+                            <field name="other_income_total" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1" string="Total Other Income"/>
+                        </group>
+                    </group>
+
+                    <!-- ══ INDIRECT EXPENSES ══ -->
+                    <div class="pnl_sec_hdr pnl_expense">
+                        Indirect Expenses (Audited)
+                    </div>
+                    <group class="pnl_sec_body pnl_expense_body">
+                        <field name="line_ids" nolabel="1" readonly="1"
+                               domain="[('section','=','indirect_expense')]">
+                            <list>
+                                <field name="account_code"/>
+                                <field name="account_name"/>
+                                <field name="amount" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"/>
+                                <field name="currency_id" column_invisible="1"/>
+                            </list>
+                        </field>
+                        <group>
+                            <field name="indirect_expense_total" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1" string="Total Indirect Expenses"/>
+                        </group>
+                    </group>
+
+                    <!-- ══ DEPRECIATION ══ -->
+                    <div class="pnl_sec_hdr pnl_depreciation">
+                        Depreciation and Amortization (Audited)
+                    </div>
+                    <group class="pnl_sec_body pnl_depreciation_body">
+                        <field name="line_ids" nolabel="1" readonly="1"
+                               domain="[('section','=','depreciation')]">
+                            <list>
+                                <field name="account_code"/>
+                                <field name="account_name"/>
+                                <field name="amount" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"/>
+                                <field name="currency_id" column_invisible="1"/>
+                            </list>
+                        </field>
+                        <group>
+                            <field name="depreciation_total" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1" string="Total Depreciation"/>
+                        </group>
+                    </group>
+
+                    <!-- ══ NET PROFIT ══ -->
+                    <group>
+                        <group class="audit_net_profit" string="Audited Net Profit / Loss">
+                            <field name="net_profit" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1" nolabel="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Hidden line_ids needed for domain filters above -->
+                    <field name="line_ids" invisible="1"/>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action: Open Wizard -->
+    <record id="action_audited_pnl_wizard" model="ir.actions.act_window">
+        <field name="name">Audited P&amp;L Report</field>
+        <field name="res_model">audited.pnl</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="views">[(ref('view_audited_pnl_wizard'), 'form')]</field>
+    </record>
+
+</odoo>

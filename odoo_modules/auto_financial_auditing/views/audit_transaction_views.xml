@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================
+         AUDIT TRANSACTION: List View
+    ================================================================ -->
+    <record id="view_audit_transaction_list" model="ir.ui.view">
+        <field name="name">audit.transaction.list</field>
+        <field name="model">audit.transaction</field>
+        <field name="arch" type="xml">
+            <list string="Transaction Audits"
+                  decoration-success="state == 'audited'"
+                  decoration-muted="state == 'rejected'"
+                  decoration-warning="state == 'draft'">
+                <field name="transaction_date"/>
+                <field name="transaction_ref"/>
+                <field name="audit_account_type"/>
+                <field name="partner_id"/>
+                <field name="amount_untaxed"/>
+                <field name="amount_tax" optional="hide"/>
+                <field name="amount_total"/>
+                <field name="salesperson_id" optional="show"/>
+                <field name="state"
+                       decoration-success="state == 'audited'"
+                       decoration-danger="state == 'rejected'"
+                       widget="badge"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         AUDIT TRANSACTION: Form View
+    ================================================================ -->
+    <record id="view_audit_transaction_form" model="ir.ui.view">
+        <field name="name">audit.transaction.form</field>
+        <field name="model">audit.transaction</field>
+        <field name="arch" type="xml">
+            <form string="Transaction Auditing">
+                <header>
+                    <button name="action_mark_audited"
+                            string="Mark as Audited"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_reject"
+                            string="Reject"
+                            type="object"
+                            class="btn-danger"
+                            invisible="state not in ['draft']"/>
+                    <button name="action_reset_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            invisible="state == 'draft'"/>
+                    <button name="action_print_voucher"
+                            string="Print Audit Voucher"
+                            type="object"
+                            class="btn-secondary"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,audited,rejected"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="display_name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <!-- ─── SECTION 1: Transaction Reference ─── -->
+                    <group string="Transaction Information">
+                        <group>
+                            <field name="move_id"
+                                   string="1. Transaction Reference"
+                                   required="1"
+                                   options="{'no_create': True, 'no_open': True}"
+                                   context="{'audit_name_only': True}"
+                                   domain="['|', ('move_type', '!=', 'entry'), ('journal_id.type', 'not in', ['cash', 'bank'])]"
+                                   placeholder="Select transaction from dropdown..."
+                                   widget="many2one"/>
+                            <field name="audit_account_type"
+                                   string="2. Audit Account Type"
+                                   readonly="1"/>
+                            <field name="partner_id"
+                                   string="3. Partner"
+                                   readonly="1"/>
+                            <field name="transaction_date" readonly="1"/>
+                            <field name="transaction_ref" readonly="1"/>
+                            <field name="journal_id" readonly="1"/>
+                            <field name="company_id" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="amount_untaxed"
+                                   string="4. Amount (before Tax)"
+                                   readonly="1"
+                                   widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"/>
+                            <!-- Tax amount: only shown when has_tax is True -->
+                            <field name="has_tax" invisible="1"/>
+                            <field name="amount_tax"
+                                   string="5. Tax Amount"
+                                   readonly="1"
+                                   widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   invisible="not has_tax"/>
+                            <field name="amount_total"
+                                   string="6. Total Amount"
+                                   readonly="1"
+                                   widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"/>
+                            <field name="salesperson_id"
+                                   string="7. Salesperson / Creator"
+                                   readonly="1"/>
+                            <field name="created_by" readonly="1"/>
+                            <field name="payment_method"
+                                   string="Payment Method"
+                                   readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- ─── Invoice Barcode (visible when a transaction is selected) ─── -->
+                    <div invisible="not transaction_ref"
+                         style="text-align:center; padding:10px 16px 6px;
+                                margin:4px 0 6px 0;
+                                background:#f8f9fa;
+                                border:1px solid #dee2e6;
+                                border-radius:6px;">
+                        <field name="barcode_img"
+                               widget="image"
+                               options="{'size': [340, 80]}"
+                               nolabel="1"
+                               readonly="1"
+                               invisible="not barcode_img"/>
+                        <div style="font-size:10px; color:#6c757d; margin-top:2px;">
+                            Invoice Reference Barcode
+                        </div>
+                    </div>
+
+                    <!-- ─── QR Code Verification (visible only when Audited) ─── -->
+                    <div invisible="state != 'audited'"
+                         style="display:flex; align-items:center; gap:20px;
+                                border:2px solid #4caf50; border-radius:8px;
+                                padding:14px 20px; margin:10px 0;
+                                background:#e8f5e9;">
+                        <div style="flex-shrink:0; text-align:center;">
+                            <field name="qr_code_img"
+                                   widget="image"
+                                   options="{'size': [150, 150]}"
+                                   nolabel="1"
+                                   readonly="1"
+                                   invisible="not qr_code_img"/>
+                        </div>
+                        <div>
+                            <div style="font-size:14px; font-weight:700;
+                                        color:#1b5e20; margin-bottom:6px;">
+                                Transaction Verified and Audited
+                            </div>
+                            <div style="font-size:12px; color:#388e3c; line-height:1.7;">
+                                Scan the QR code to verify all transaction details.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ─── Transaction Line Details (auto-filled) ─── -->
+                    <notebook>
+                        <page string="Transaction Lines" name="lines">
+                            <field name="audit_line_ids" readonly="1">
+                                <list>
+                                    <field name="product_id"/>
+                                    <field name="name"/>
+                                    <field name="quantity"/>
+                                    <field name="price_unit"/>
+                                    <field name="tax_amount"
+                                           optional="show"/>
+                                    <field name="subtotal"/>
+                                    <field name="account_id"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- ─── SECTION 8: Partner Signature ─── -->
+                        <page string="8. Partner Signature" name="customer_sig">
+                            <div class="alert alert-info" role="alert"
+                                 invisible="audit_account_type != 'Sales Invoice'">
+                                Partner signature is <strong>mandatory</strong> for
+                                Sales Invoice (credit / accounts receivable) transactions.
+                                If courier delivery is selected and proof is uploaded,
+                                either the proof or the signature is sufficient.
+                            </div>
+                            <group>
+                                <group string="Partner Details">
+                                    <field name="customer_signed_by"
+                                           string="Partner Name"/>
+                                    <field name="customer_signed_date"
+                                           string="Date Signed"/>
+                                </group>
+                                <group string="Courier Delivery">
+                                    <field name="is_courier"
+                                           string="Courier Delivery"/>
+                                    <field name="courier_proof"
+                                           string="Courier Proof"
+                                           widget="binary"
+                                           filename="courier_proof_filename"
+                                           invisible="not is_courier"/>
+                                    <field name="courier_proof_filename"
+                                           invisible="1"/>
+                                </group>
+                            </group>
+                            <!-- Full-width signature pad — outside any group column -->
+                            <div style="padding: 0 8px 12px;">
+                                <div style="font-weight:600; color:#1B4F72; margin-bottom:6px;">
+                                    Partner Signature
+                                    <span style="color:#dc3545;"
+                                          invisible="audit_account_type != 'Sales Invoice'"> *</span>
+                                </div>
+                                <field name="customer_signature"
+                                       widget="signature_pad"
+                                       nolabel="1"/>
+                            </div>
+                        </page>
+
+                        <!-- ─── SECTION 9: Cashier Signature ─── -->
+                        <page string="9. Cashier Signature *" name="cashier_sig">
+                            <div class="alert alert-warning" role="alert"
+                                 invisible="state != 'draft'">
+                                Cashier signature is <strong>mandatory</strong> before
+                                this transaction can be marked as Audited.
+                            </div>
+                            <group>
+                                <group string="Cashier Details">
+                                    <field name="cashier_signed_by"
+                                           string="Cashier Name"
+                                           required="1"/>
+                                    <field name="cashier_signed_date"
+                                           string="Date Signed"/>
+                                </group>
+                            </group>
+                            <!-- Full-width signature pad — outside any group column -->
+                            <div style="padding: 0 8px 12px;">
+                                <div style="font-weight:600; color:#1B4F72; margin-bottom:6px;">
+                                    Cashier Signature <span style="color:#dc3545;">*</span>
+                                </div>
+                                <field name="cashier_signature"
+                                       widget="signature_pad"
+                                       nolabel="1"/>
+                            </div>
+                        </page>
+
+                        <!-- ─── QR Code ─── -->
+                        <page string="QR Code" name="qr_code"
+                              invisible="state != 'audited'">
+                            <div style="text-align: center; padding: 20px;">
+                                <h4 style="color:#1B4F72;">Transaction Verification QR Code</h4>
+                                <p class="text-muted">
+                                    Scan this QR code to verify all transaction details.
+                                </p>
+                                <field name="qr_code_img"
+                                       widget="image"
+                                       options="{'size': [220, 220]}"
+                                       nolabel="1"
+                                       readonly="1"
+                                       invisible="not qr_code_img"/>
+                                <p class="text-muted" invisible="qr_code_img">
+                                    QR code will appear after saving the record.
+                                </p>
+                            </div>
+                        </page>
+
+                        <!-- ─── Source Documents ─── -->
+                        <page string="Source Voucher / Invoice" name="source_docs">
+                            <p class="text-muted">
+                                Attachments from the original transaction document are shown below.
+                                These serve as proof of the audited transaction.
+                            </p>
+                            <field name="source_attachment_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="mimetype"/>
+                                    <field name="file_size"/>
+                                    <field name="create_date"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_audit_transaction" model="ir.actions.act_window">
+        <field name="name">Transaction Auditing</field>
+        <field name="res_model">audit.transaction</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No audited transactions yet.
+            </p>
+            <p>
+                Select any posted transaction from the dropdown and collect
+                customer and cashier signatures to complete the audit.
+            </p>
+        </field>
+    </record>
+
+</odoo>
