@@ -2,7 +2,7 @@
   "expo": {
     "name": "369aiAlphalize",
     "slug": "369aialphalize",
-    "owner": "amal200000",
+    "owner": "sribalakumarr",
     "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -92,7 +92,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "ab392238-35e1-449b-ac70-6c2ea8119d6e"
+        "projectId": "70a540ea-ba6b-4a6d-bc66-7d158d4c4670"
       }
     }
   }
