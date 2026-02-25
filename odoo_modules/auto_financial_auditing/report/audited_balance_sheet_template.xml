@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="report_audited_balance_sheet_template">
+    <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="o">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <div style="text-align:center; border-bottom:3px solid #1B4F72; padding-bottom:10px; margin-bottom:20px;">
+                        <h2 style="color:#1B4F72; margin:0;">AUDITED BALANCE SHEET</h2>
+                        <p style="margin:5px 0; font-size:13px;">
+                            <strong t-field="o.company_names"/>
+                        </p>
+                        <p style="margin:0; color:#555; font-size:12px;">
+                            Opening balances as of
+                            <span t-field="o.date_from" t-options="{'widget': 'date', 'format': 'dd/MM/yyyy'}"/>
+                            &amp;nbsp;|&amp;nbsp; Audited Period:
+                            <span t-field="o.date_from" t-options="{'widget': 'date', 'format': 'dd/MM/yyyy'}"/>
+                            to
+                            <span t-field="o.date_to" t-options="{'widget': 'date', 'format': 'dd/MM/yyyy'}"/>
+                        </p>
+                        <p style="margin:5px 0; font-size:11px; color:#c0392b; font-style:italic;">
+                            ★ Only Audited Transactions are included in the period movements.
+                        </p>
+                    </div>
+
+                    <!-- Summary Row -->
+                    <table class="table table-sm" style="margin-bottom:15px;">
+                        <tr style="background:#e8eaf6; font-weight:bold; text-align:center;">
+                            <td>Total Assets</td>
+                            <td>Total Liabilities</td>
+                            <td>Total Equity</td>
+                            <td>Audited Net Profit</td>
+                        </tr>
+                        <tr style="text-align:center; font-size:14px; font-weight:bold; color:#1B4F72;">
+                            <td>
+                                <span t-field="o.total_assets"
+                                      t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                            </td>
+                            <td>
+                                <span t-field="o.total_liabilities"
+                                      t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                            </td>
+                            <td>
+                                <span t-field="o.total_equity"
+                                      t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                            </td>
+                            <td>
+                                <span t-field="o.audited_net_profit"
+                                      t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Report Lines -->
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr style="background:#1B4F72; color:white;">
+                                <th style="width:70%;">Particulars</th>
+                                <th class="text-right" style="width:30%;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="o.report_line_ids.sorted('sequence')" t-as="line">
+                                <t t-if="line.line_type == 'section_header'">
+                                    <tr style="background:#1B4F72; color:white; font-weight:bold;">
+                                        <td colspan="2" style="letter-spacing:1px;">
+                                            <span t-field="line.name"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-elif="line.line_type == 'section'">
+                                    <tr style="background:#e8eaf6; font-weight:bold;">
+                                        <td><span t-field="line.name"/></td>
+                                        <td class="text-right">
+                                            <span t-field="line.balance"
+                                                  t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-elif="line.line_type == 'total'">
+                                    <tr style="background:#1B4F72; color:white; font-weight:bold; font-size:13px; border-top:2px solid #1B4F72;">
+                                        <td><span t-field="line.name"/></td>
+                                        <td class="text-right">
+                                            <span t-field="line.balance"
+                                                  t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-elif="line.line_type == 'profit_loss'">
+                                    <tr style="background:#fff8e1; font-weight:bold;">
+                                        <td><span t-field="line.name"/></td>
+                                        <td class="text-right">
+                                            <span t-field="line.balance"
+                                                  t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-else="">
+                                    <tr>
+                                        <td style="padding-left:30px; font-size:11px;">
+                                            <span t-field="line.name"/>
+                                        </td>
+                                        <td class="text-right" style="font-size:11px;">
+                                            <span t-field="line.balance"
+                                                  t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top:20px; padding:8px; background:#fff8e1; border-left:4px solid #f9a825; font-size:10px;">
+                        <strong>Note:</strong> Opening balances are taken from all posted journal entries
+                        up to the day before the selected Start Date. Period movements include only
+                        transactions verified in the Transaction Auditing module.
+                    </div>
+                </div>
+            </t>
+        </t>
+    </t>
+</template>
+</odoo>

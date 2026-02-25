@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_audit_transaction_manager,audit.transaction manager,model_audit_transaction,account.group_account_manager,1,1,1,1
+access_audit_transaction_user,audit.transaction user,model_audit_transaction,account.group_account_user,1,1,1,0
+access_audit_transaction_line_manager,audit.transaction.line manager,model_audit_transaction_line,account.group_account_manager,1,1,1,1
+access_audit_transaction_line_user,audit.transaction.line user,model_audit_transaction_line,account.group_account_user,1,1,1,0
+access_audited_balance_sheet,audited.balance.sheet,model_audited_balance_sheet,account.group_account_user,1,1,1,1
+access_audited_balance_sheet_line,audited.balance.sheet.line,model_audited_balance_sheet_line,account.group_account_user,1,1,1,1
+access_audited_pnl,audited.pnl,model_audited_pnl,account.group_account_user,1,1,1,1
+access_audited_pnl_line,audited.pnl.line,model_audited_pnl_line,account.group_account_user,1,1,1,1

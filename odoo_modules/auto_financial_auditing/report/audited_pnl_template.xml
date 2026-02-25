@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="report_audited_pnl_template">
+    <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="o">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <div style="text-align:center; border-bottom:3px solid #1B4F72; padding-bottom:10px; margin-bottom:20px;">
+                        <h2 style="color:#1B4F72; margin:0;">AUDITED PROFIT &amp; LOSS REPORT</h2>
+                        <p style="margin:5px 0; font-size:13px;">
+                            <strong t-field="o.company_names"/>
+                        </p>
+                        <p style="margin:0; color:#555; font-size:12px;">
+                            Period:
+                            <span t-field="o.date_from" t-options="{'widget': 'date', 'format': 'dd/MM/yyyy'}"/>
+                            to
+                            <span t-field="o.date_to" t-options="{'widget': 'date', 'format': 'dd/MM/yyyy'}"/>
+                        </p>
+                        <p style="margin:5px 0; font-size:11px; color:#c0392b; font-style:italic;">
+                            ★ Only transactions verified through the Transaction Auditing form are included.
+                        </p>
+                    </div>
+
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr style="background:#1B4F72; color:white;">
+                                <th style="width:15%;">Code</th>
+                                <th style="width:55%;">Account</th>
+                                <th class="text-right" style="width:30%;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <!-- Revenue -->
+                            <tr style="background:#1B4F72; color:white; font-weight:bold;">
+                                <td colspan="3">REVENUE (Audited Direct Income)</td>
+                            </tr>
+                            <t t-foreach="o.line_ids.filtered(lambda l: l.section == 'revenue')" t-as="line">
+                                <tr>
+                                    <td style="font-size:11px;"><span t-field="line.account_code"/></td>
+                                    <td style="padding-left:20px; font-size:11px;"><span t-field="line.account_name"/></td>
+                                    <td class="text-right" style="font-size:11px;">
+                                        <span t-field="line.amount"
+                                              t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <tr style="background:#e8eaf6; font-weight:bold;">
+                                <td colspan="2">Total Revenue</td>
+                                <td class="text-right">
+                                    <span t-field="o.revenue_total"
+                                          t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                </td>
+                            </tr>
+
+                            <!-- COGS -->
+                            <tr style="background:#1a237e; color:white; font-weight:bold;">
+                                <td colspan="3">COST OF REVENUE (COGS)</td>
+                            </tr>
+                            <t t-foreach="o.line_ids.filtered(lambda l: l.section == 'cogs')" t-as="line">
+                                <tr>
+                                    <td style="font-size:11px;"><span t-field="line.account_code"/></td>
+                                    <td style="padding-left:20px; font-size:11px;"><span t-field="line.account_name"/></td>
+                                    <td class="text-right" style="font-size:11px;">
+                                        <span t-field="line.amount"
+                                              t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <tr style="background:#e8eaf6; font-weight:bold;">
+                                <td colspan="2">Total COGS</td>
+                                <td class="text-right">
+                                    <span t-field="o.cogs_total"
+                                          t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                </td>
+                            </tr>
+
+                            <!-- Gross Profit -->
+                            <tr style="background:#c8e6c9; font-weight:bold; font-size:13px; border-top:2px solid #2e7d32;">
+                                <td colspan="2">GROSS PROFIT</td>
+                                <td class="text-right">
+                                    <span t-field="o.gross_profit"
+                                          t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                </td>
+                            </tr>
+
+                            <!-- Other Income -->
+                            <tr style="background:#1B4F72; color:white; font-weight:bold;">
+                                <td colspan="3">OTHER INCOME (Audited)</td>
+                            </tr>
+                            <t t-foreach="o.line_ids.filtered(lambda l: l.section == 'other_income')" t-as="line">
+                                <tr>
+                                    <td style="font-size:11px;"><span t-field="line.account_code"/></td>
+                                    <td style="padding-left:20px; font-size:11px;"><span t-field="line.account_name"/></td>
+                                    <td class="text-right" style="font-size:11px;">
+                                        <span t-field="line.amount"
+                                              t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <tr style="background:#e8eaf6; font-weight:bold;">
+                                <td colspan="2">Total Other Income</td>
+                                <td class="text-right">
+                                    <span t-field="o.other_income_total"
+                                          t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                </td>
+                            </tr>
+
+                            <!-- Indirect Expenses -->
+                            <tr style="background:#1B4F72; color:white; font-weight:bold;">
+                                <td colspan="3">INDIRECT EXPENSES (Audited)</td>
+                            </tr>
+                            <t t-foreach="o.line_ids.filtered(lambda l: l.section == 'indirect_expense')" t-as="line">
+                                <tr>
+                                    <td style="font-size:11px;"><span t-field="line.account_code"/></td>
+                                    <td style="padding-left:20px; font-size:11px;"><span t-field="line.account_name"/></td>
+                                    <td class="text-right" style="font-size:11px;">
+                                        <span t-field="line.amount"
+                                              t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <tr style="background:#e8eaf6; font-weight:bold;">
+                                <td colspan="2">Total Indirect Expenses</td>
+                                <td class="text-right">
+                                    <span t-field="o.indirect_expense_total"
+                                          t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                </td>
+                            </tr>
+
+                            <!-- Depreciation -->
+                            <tr style="background:#1B4F72; color:white; font-weight:bold;">
+                                <td colspan="3">DEPRECIATION &amp; AMORTIZATION (Audited)</td>
+                            </tr>
+                            <t t-foreach="o.line_ids.filtered(lambda l: l.section == 'depreciation')" t-as="line">
+                                <tr>
+                                    <td style="font-size:11px;"><span t-field="line.account_code"/></td>
+                                    <td style="padding-left:20px; font-size:11px;"><span t-field="line.account_name"/></td>
+                                    <td class="text-right" style="font-size:11px;">
+                                        <span t-field="line.amount"
+                                              t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <tr style="background:#e8eaf6; font-weight:bold;">
+                                <td colspan="2">Total Depreciation</td>
+                                <td class="text-right">
+                                    <span t-field="o.depreciation_total"
+                                          t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                </td>
+                            </tr>
+
+                            <!-- Net Profit -->
+                            <tr t-attf-style="background:#{o.net_profit >= 0 and '#c8e6c9' or '#ffcdd2'}; font-weight:bold; font-size:14px; border-top:3px solid #1B4F72;">
+                                <td colspan="2">AUDITED NET PROFIT</td>
+                                <td class="text-right">
+                                    <span t-field="o.net_profit"
+                                          t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top:20px; padding:8px; background:#fff8e1; border-left:4px solid #f9a825; font-size:10px;">
+                        <strong>Audit Integrity Note:</strong> This P&amp;L report reflects ONLY
+                        transactions that have been individually verified through the Transaction
+                        Auditing form, signed by both the customer and cashier. Unaudited transactions
+                        are excluded to ensure financial accuracy and prevent fraud.
+                    </div>
+                </div>
+            </t>
+        </t>
+    </t>
+</template>
+</odoo>

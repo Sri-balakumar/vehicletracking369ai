@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<t t-name="auto_financial_auditing.SignaturePadWidget">
+<div class="o_sig_pad_root">
+
+    <!-- ═══════════════════════════════════════════════
+         EDIT MODE
+    ═══════════════════════════════════════════════ -->
+    <t t-if="!props.readonly">
+        <div class="o_sig_pad_layout">
+
+            <!-- ── Left: Tool Panel ── -->
+            <div class="o_sig_tool_panel">
+
+                <!-- Title -->
+                <div class="o_sig_panel_title">Signature Tools</div>
+
+                <!-- ── PEN section ── -->
+                <div t-on-click="() => this.setTool('pen')"
+                     t-attf-class="o_sig_tool_btn {{ state.tool === 'pen' ? 'active' : '' }}">
+                    <span class="o_sig_tool_icon">&#9998;</span>
+                    <span class="o_sig_tool_label">Pen</span>
+                </div>
+
+                <t t-if="state.tool === 'pen'">
+                    <div class="o_sig_slider_wrap">
+                        <label class="o_sig_slider_label">
+                            Size
+                            <span class="o_sig_slider_val" t-esc="state.penSize + 'px'"/>
+                        </label>
+                        <input type="range" min="1" max="12" t-att-value="state.penSize"
+                               t-on-input="onPenSizeChange" class="o_sig_slider"/>
+                        <!-- Ink colour -->
+                        <label class="o_sig_slider_label mt-1">Ink Color</label>
+                        <div class="o_sig_color_row">
+                            <t t-foreach="['#1a1a2e','#2563eb','#dc2626','#16a34a','#7c3aed','#000000']" t-as="col" t-key="col">
+                                <span t-on-click="() => { this.state.penColor = col; }"
+                                      t-attf-class="o_sig_color_dot {{ state.penColor === col ? 'selected' : '' }}"
+                                      t-attf-style="background:{{ col }};"/>
+                            </t>
+                            <input type="color" t-att-value="state.penColor"
+                                   t-on-input="onColorChange"
+                                   class="o_sig_color_picker" title="Custom color"/>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ── ERASER section ── -->
+                <div t-on-click="() => this.setTool('eraser')"
+                     t-attf-class="o_sig_tool_btn {{ state.tool === 'eraser' ? 'active eraser' : '' }}">
+                    <span class="o_sig_tool_icon">&#9643;</span>
+                    <span class="o_sig_tool_label">Eraser</span>
+                </div>
+
+                <t t-if="state.tool === 'eraser'">
+                    <div class="o_sig_slider_wrap">
+                        <label class="o_sig_slider_label">
+                            Size
+                            <span class="o_sig_slider_val" t-esc="state.eraserSize + 'px'"/>
+                        </label>
+                        <input type="range" min="5" max="60" t-att-value="state.eraserSize"
+                               t-on-input="onEraserSizeChange" class="o_sig_slider"/>
+                    </div>
+                </t>
+
+                <!-- ── Divider ── -->
+                <div class="o_sig_divider"/>
+
+                <!-- ── CLEAR ── -->
+                <div class="o_sig_tool_btn danger" t-on-click="clearCanvas">
+                    <span class="o_sig_tool_icon">&#128465;</span>
+                    <span class="o_sig_tool_label">Clear</span>
+                </div>
+
+                <!-- ── UPLOAD ── -->
+                <div class="o_sig_tool_btn upload" t-on-click="triggerUpload">
+                    <span class="o_sig_tool_icon">&#128206;</span>
+                    <span class="o_sig_tool_label">Upload</span>
+                </div>
+
+                <input t-ref="fileInput" type="file" accept="image/*"
+                       style="display:none;" t-on-change="onFileChange"/>
+
+            </div><!-- /tool panel -->
+
+            <!-- ── Right: Canvas area ── -->
+            <div class="o_sig_canvas_wrap">
+                <div class="o_sig_canvas_label">
+                    Draw your signature below
+                </div>
+                <canvas t-ref="sigCanvas"
+                        width="700" height="280"
+                        t-attf-style="cursor: {{ cursorStyle }};"
+                        class="o_sig_canvas"
+                        t-on-mousedown="onPointerDown"
+                        t-on-mousemove="onPointerMove"
+                        t-on-mouseup="onPointerUp"
+                        t-on-mouseleave="onPointerUp"
+                        t-on-touchstart="onPointerDown"
+                        t-on-touchmove="onPointerMove"
+                        t-on-touchend="onPointerUp"/>
+                <p class="o_sig_hint">
+                    Use the pen to sign, eraser to fix mistakes, or upload an image (JPG / PNG).
+                </p>
+            </div>
+
+        </div><!-- /layout -->
+    </t>
+
+    <!-- ═══════════════════════════════════════════════
+         READONLY MODE
+    ═══════════════════════════════════════════════ -->
+    <t t-else="">
+        <div class="o_sig_readonly_wrap">
+            <t t-if="fieldValue">
+                <img t-attf-src="/web/image/{{ props.record.resModel }}/{{ props.record.resId }}/{{ props.name }}"
+                     class="o_sig_readonly_img"/>
+            </t>
+            <t t-else="">
+                <span class="o_sig_no_sig">No signature captured</span>
+            </t>
+        </div>
+    </t>
+
+</div>
+</t>
+
+</templates>

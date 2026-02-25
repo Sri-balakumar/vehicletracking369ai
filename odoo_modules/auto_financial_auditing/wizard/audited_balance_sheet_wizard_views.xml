@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Wizard: Input Form -->
+    <record id="view_audited_balance_sheet_wizard" model="ir.ui.view">
+        <field name="name">audited.balance.sheet.wizard</field>
+        <field name="model">audited.balance.sheet</field>
+        <field name="arch" type="xml">
+            <form string="Audited Balance Sheet">
+                <sheet>
+                    <h2>Audited Balance Sheet</h2>
+                    <p class="text-muted">
+                        Opening balances are taken from the original Odoo Balance Sheet
+                        (all accounts as of the day before the Start Date).
+                        Period movements include ONLY transactions verified through the
+                        Transaction Auditing form.
+                    </p>
+
+                    <!-- ── Period Preset ── -->
+                    <group string="Period">
+                        <field name="period_preset" string="Period"/>
+                        <field name="date_from" required="1"
+                               invisible="period_preset != 'custom'"/>
+                        <field name="date_to"   required="1"
+                               invisible="period_preset != 'custom'"/>
+                        <!-- Show readonly dates for non-custom presets -->
+                        <field name="date_from" readonly="1" string="From"
+                               invisible="period_preset == 'custom'"/>
+                        <field name="date_to"   readonly="1" string="To"
+                               invisible="period_preset == 'custom'"/>
+                    </group>
+
+                    <!-- ── Company Scope ── -->
+                    <group string="Companies">
+                        <field name="company_scope" string="Company Scope"/>
+                        <!-- All companies: readonly list -->
+                        <field name="company_ids"
+                               widget="many2many_tags"
+                               readonly="1"
+                               string="Active Companies (from switcher)"
+                               invisible="company_scope != 'all'"/>
+                        <!-- Selected companies: editable -->
+                        <field name="company_ids"
+                               widget="many2many_tags"
+                               string="Select Companies"
+                               invisible="company_scope != 'selected'"/>
+                    </group>
+
+                    <!-- ── Options ── -->
+                    <group string="Options">
+                        <field name="target_move"/>
+                        <field name="show_zero_balance"/>
+                    </group>
+
+                    <footer>
+                        <button name="action_generate_report"
+                                string="Generate Report"
+                                type="object"
+                                class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Result: Report View -->
+    <record id="view_audited_balance_sheet_result" model="ir.ui.view">
+        <field name="name">audited.balance.sheet.result</field>
+        <field name="model">audited.balance.sheet</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <form string="Audited Balance Sheet">
+                <header>
+                    <button name="action_print_pdf"
+                            string="Print PDF"
+                            type="object"
+                            class="btn-primary"/>
+                    <button name="action_export_excel"
+                            string="Export Excel"
+                            type="object"
+                            class="btn-secondary"/>
+                    <button name="action_generate_report"
+                            string="Regenerate"
+                            type="object"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                        <h4 class="text-muted">
+                            <field name="company_names" readonly="1"/>
+                            — As of <field name="date_to" readonly="1"/>
+                        </h4>
+                        <h5 class="text-muted">
+                            Audited Period: <field name="date_from" readonly="1"/>
+                            to <field name="date_to" readonly="1"/>
+                        </h5>
+                    </div>
+
+                    <field name="currency_id" invisible="1"/>
+
+                    <!-- Summary KPIs -->
+                    <div class="o_stat_buttons">
+                        <button class="o_stat_button btn_green" type="object" name="">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="total_assets" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"/>
+                                </span>
+                                <span class="o_stat_text">Total Assets</span>
+                            </div>
+                        </button>
+                        <button class="o_stat_button btn_red" type="object" name="">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="total_liabilities" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"/>
+                                </span>
+                                <span class="o_stat_text">Total Liabilities</span>
+                            </div>
+                        </button>
+                        <button class="o_stat_button btn_blue" type="object" name="">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="total_equity" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"/>
+                                </span>
+                                <span class="o_stat_text">Total Equity</span>
+                            </div>
+                        </button>
+                        <button class="o_stat_button btn_amber" type="object" name="">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="audited_net_profit" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"/>
+                                </span>
+                                <span class="o_stat_text">Audited Net Profit</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Balances Summary -->
+                    <group>
+                        <group string="Assets">
+                            <field name="total_assets" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1" string="Total Assets"/>
+                        </group>
+                        <group string="Liabilities &amp; Equity">
+                            <field name="total_liabilities" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1" string="Total Liabilities"/>
+                            <field name="total_equity" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1" string="Total Equity"/>
+                            <field name="audited_net_profit" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1" string="Audited Net Profit / Loss"/>
+                        </group>
+                    </group>
+
+                    <!-- Report Lines Table -->
+                    <field name="report_line_ids" readonly="1" nolabel="1">
+                        <list string="Balance Sheet"
+                              decoration-bf="line_type in ['section','total','section_header','profit_loss']"
+                              decoration-info="line_type == 'section_header'"
+                              decoration-success="line_type == 'total'"
+                              decoration-warning="line_type == 'profit_loss'"
+                              decoration-muted="line_type == 'account'">
+                            <field name="name"
+                                   class="o_field_text"
+                                   column_invisible="0"/>
+                            <field name="balance"
+                                   widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   invisible="line_type == 'section_header'"/>
+                            <field name="line_type" column_invisible="1"/>
+                            <field name="currency_id" column_invisible="1"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action: Open Wizard -->
+    <record id="action_audited_balance_sheet_wizard" model="ir.actions.act_window">
+        <field name="name">Audited Balance Sheet</field>
+        <field name="res_model">audited.balance.sheet</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="views">[(ref('view_audited_balance_sheet_wizard'), 'form')]</field>
+    </record>
+
+</odoo>
